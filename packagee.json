@@ -1,0 +1,9 @@
+{
+  "name": "lb-cadastro-cliente",
+  "version": "1.0.0",
+  "description": "Formulário público de cadastro de clientes + intermediário Firebase Admin",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
