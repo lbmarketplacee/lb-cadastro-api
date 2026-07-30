@@ -15,7 +15,7 @@ function inicializarFirebase() {
   });
 }
 
-async function salvarArquivo(base64, caminho) {
+async function salvarArquivo(base64, caminho, nomeArquivo) {
   const [meta, dados] = base64.split(',');
   const tipo = meta.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
   const buffer = Buffer.from(dados, 'base64');
@@ -23,10 +23,11 @@ async function salvarArquivo(base64, caminho) {
   const file = bucket.file(caminho);
   await file.save(buffer, { metadata: { contentType: tipo } });
   // Gera um link assinado e temporário (10 anos) em vez de tornar o arquivo público pra sempre.
-  // Mais seguro: só quem tiver esse link específico consegue ver a foto do documento.
+  // responseDisposition força o navegador a BAIXAR o arquivo (em vez de só exibir), com nome amigável.
   const [urlAssinada] = await file.getSignedUrl({
     action: 'read',
-    expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000
+    expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000,
+    responseDisposition: `attachment; filename="${nomeArquivo}"`
   });
   return urlAssinada;
 }
@@ -64,10 +65,11 @@ export default async function handler(req, res) {
 
     // Sobe os 3 arquivos pro Storage, organizados numa pasta com o ID do cadastro
     const pasta = `cadastros/${docRef.id}`;
+    const nomeBase = (nomeLoja || 'cliente').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
     const [urlFrente, urlVerso, urlSelfie] = await Promise.all([
-      salvarArquivo(docFrente, `${pasta}/documento-frente.jpg`),
-      salvarArquivo(docVerso, `${pasta}/documento-verso.jpg`),
-      salvarArquivo(selfie, `${pasta}/selfie.jpg`)
+      salvarArquivo(docFrente, `${pasta}/documento-frente.jpg`, `${nomeBase}-doc-frente.jpg`),
+      salvarArquivo(docVerso, `${pasta}/documento-verso.jpg`, `${nomeBase}-doc-verso.jpg`),
+      salvarArquivo(selfie, `${pasta}/selfie.jpg`, `${nomeBase}-selfie.jpg`)
     ]);
 
     await docRef.update({ urlDocFrente: urlFrente, urlDocVerso: urlVerso, urlSelfie: urlSelfie });
