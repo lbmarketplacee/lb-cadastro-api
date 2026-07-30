@@ -44,6 +44,7 @@ export default async function handler(req, res) {
 
     const {
       nomeLoja, email, telefone, documento, cep, numero,
+      rua, bairro, cidade, estado,
       nicho, qtdProdutos, plataformas, docFrente, docVerso, selfie
     } = req.body || {};
 
@@ -54,6 +55,7 @@ export default async function handler(req, res) {
     // Cria o registro primeiro (sem os arquivos) pra pegar um ID
     const docRef = await db.collection('cadastros').add({
       nomeLoja, email, telefone, documento, cep, numero,
+      rua: rua || '', bairro: bairro || '', cidade: cidade || '', estado: estado || '',
       nicho, qtdProdutos: Number(qtdProdutos) || 0,
       plataformas: plataformas || [],
       status: 'pendente',
