@@ -22,8 +22,13 @@ async function salvarArquivo(base64, caminho) {
   const bucket = getStorage().bucket();
   const file = bucket.file(caminho);
   await file.save(buffer, { metadata: { contentType: tipo } });
-  await file.makePublic();
-  return `https://storage.googleapis.com/${bucket.name}/${caminho}`;
+  // Gera um link assinado e temporário (10 anos) em vez de tornar o arquivo público pra sempre.
+  // Mais seguro: só quem tiver esse link específico consegue ver a foto do documento.
+  const [urlAssinada] = await file.getSignedUrl({
+    action: 'read',
+    expires: Date.now() + 10 * 365 * 24 * 60 * 60 * 1000
+  });
+  return urlAssinada;
 }
 
 export default async function handler(req, res) {
